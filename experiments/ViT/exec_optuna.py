@@ -164,14 +164,14 @@ def main(
         )
         print_trainable_parameters(model)
 
-        if mode == "fourier":
-            from peft import FourierConfig, FourierModel
-            config = FourierConfig(
+        if mode == "MaCP":
+            from peft import MaCPConfig, MaCPModel
+            config = MaCPConfig(
                 target_modules=["query", "value"],
                 modules_to_save=["classifier"],
                 n_frequency=n_frequency,
             )
-            model = FourierModel(model, config, 'default')
+            model = MaCPModel(model, config, 'default')
             model.set_extra_trainable(["classifier"])
         elif mode == "lora":
             from peft import LoraConfig, get_peft_model
@@ -195,7 +195,7 @@ def main(
         return model
 
     model_name = model_name_or_path.split("/")[-1]
-    if mode == "fourier":
+    if mode == "MaCP":
         save_id = f'{model_name}-{mode}-f{n_frequency}-{dataset_name}-{1}'
     elif mode == "lora":
         save_id = f'{model_name}-{mode}-r{lora_r}-a{lora_alpha}-d{lora_dropout}-{dataset_name}'
@@ -227,7 +227,7 @@ def main(
 
     def objective(trial):
         head_lr = trial.suggest_float("head_lr", 1e-6, 1e-3, log=True)
-        other_lr = head_lr * 300 if mode == "fourier" else head_lr
+        other_lr = head_lr * 300 if mode == "MaCP" else head_lr
         weight_decay = trial.suggest_float("weight_decay", 1e-5, 1e-3, log=True)
 
         model = get_model().to(device)
@@ -279,7 +279,7 @@ def main(
         # evaluate the model on test dataset with different seeds
         test_metrics = []
         head_lr = trial.params["head_lr"]
-        other_lr = head_lr * 300 if mode == "fourier" else head_lr
+        other_lr = head_lr * 300 if mode == "MaCP" else head_lr
         weight_decay = trial.params["weight_decay"]
 
         trainable_params, all_param = 0, 0

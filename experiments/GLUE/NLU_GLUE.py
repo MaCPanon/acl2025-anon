@@ -5,18 +5,18 @@ import torch
 import numpy as np
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
-from peft.tuners.fourier.layer import FourierLayer
+from peft.tuners.MaCP.layer import MaCPLayer
 from peft import (
     get_peft_config,
     get_peft_model,
     get_peft_model_state_dict,
     set_peft_model_state_dict,
     LoraConfig,
-    FourierConfig,
+    MaCPConfig,
     PeftType,
     PrefixTuningConfig,
     PromptEncoderConfig,
-    FourierModel
+    MaCPModel
 )
 from datasets import load_dataset, load_metric
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, get_linear_schedule_with_warmup, set_seed
@@ -27,12 +27,12 @@ print(args)
 
 torch.manual_seed(args.seed)
 task = args.task
-peft_type = PeftType.FOURIER
+peft_type = PeftType.MaCP
 device = "cuda"
 num_labels = 2
 if task == "stsb":
     num_labels = 1
-peft_config = FourierConfig(task_type="SEQ_CLS", inference_mode=False, n_frequency = args.n_frequency, scale = args.scale)
+peft_config = MaCPConfig(task_type="SEQ_CLS", inference_mode=False, n_frequency = args.n_frequency, scale = args.scale)
 
 def log(*pargs):
     path_log = './logs_glue/' + task + '/' + args.model_name_or_path.split("-")[1] + '/bs' + str(args.bs) + 'maxlen' + str(args.max_length) + 'f_lr' + str(args.fft_lr)+ 'h_lr' + str(args.head_lr) + \
@@ -234,9 +234,9 @@ for epoch in range(args.num_epochs):
         lr_scheduler.step()
         optimizer.zero_grad()
 
-       # Collect mean and variance from Fourier layers
+       # Collect mean and variance from MaCP layers
         for module in model.modules():
-            if isinstance(module, FourierLayer):  # Only collect from layers inheriting FourierLayer
+            if isinstance(module, MaCPLayer):  # Only collect from layers inheriting MaCPLayer
                 epoch_means_before.append(module.delta_w_stats["mean_before"])
                 epoch_vars_before.append(module.delta_w_stats["var_before"])
                 epoch_means_after.append(module.delta_w_stats["mean_after"])

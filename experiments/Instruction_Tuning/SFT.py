@@ -12,7 +12,7 @@ import transformers
 from torch.utils.data import Dataset
 from transformers import Trainer
 
-from peft import PeftModel, FourierConfig, TaskType, get_peft_model
+from peft import PeftModel, MaCPConfig, TaskType, get_peft_model
 from datasets import load_dataset
 
 
@@ -39,7 +39,7 @@ class ModelArguments:
         default=None,
         metadata={"help": "Path to the LoRA adapter. Used in evaluation or resuming from the checkpoint."},
     )
-    fourier_init: bool = field(
+    MaCP_init: bool = field(
         default=True,
         metadata={"help": "True: Use zero and gaussian initialization; False: Load adapters from LoftQ in HF hub."},
     )
@@ -85,8 +85,8 @@ class TrainingArguments(transformers.TrainingArguments):
     local_rank: int = field(default=-1)
     cache_dir: Optional[str] = field(default=None)
     use_peft: Optional[bool] = field(default=False, metadata={"help": "Wether to use PEFT or not to train adapters"})
-    n_frequency: Optional[int] = field(default=1000, metadata={"help": "the num_frequency of the Fourier adapters"})
-    scale: Optional[float] = field(default=300.0, metadata={"help": "the scale of the Fourier adapters"})
+    n_frequency: Optional[int] = field(default=1000, metadata={"help": "the num_frequency of the MaCP adapters"})
+    scale: Optional[float] = field(default=300.0, metadata={"help": "the scale of the MaCP adapters"})
 
     evaluation_strategy: Optional[str] = field(default="steps", metadata={"help": "the evaluation strategy"})
     eval_steps: Optional[int] = field(default=5, metadata={"help": "the number of evaluation steps"})
@@ -256,7 +256,7 @@ def train():
     ##########################
     #       Peft Model       #
     ##########################
-    if model_args.fourier_init:
+    if model_args.MaCP_init:
         task_type = TaskType.CAUSAL_LM
         if any(name in model_args.model_name_or_path.lower() for name in ["llama", "mistral", "falcon"]):
             # target_modules = ["q_proj", "k_proj", "v_proj", "o_proj", "up_proj", "down_proj", "gate_proj"] 
@@ -267,13 +267,13 @@ def train():
             raise ValueError(f"Only support LLAMA, Mistral, Falcon, Phi-2, but got {model_args.model_name_or_path}.")
         training_args.target_modules = target_modules
 
-        fourier_config = FourierConfig(
+        MaCP_config = MaCPConfig(
             task_type=task_type,
             inference_mode=False,
             n_frequency=training_args.n_frequency,
             scale=training_args.scale
         )
-        model = get_peft_model(model, fourier_config)
+        model = get_peft_model(model, MaCP_config)
     elif model_args.adapter_name_or_path is not None:
         model = PeftModel.from_pretrained(
             model,

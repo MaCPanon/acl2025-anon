@@ -10,11 +10,11 @@ from peft import (
     get_peft_model_state_dict,
     set_peft_model_state_dict,
     LoraConfig,
-    FourierConfig,
+    MaCPConfig,
     PeftType,
     PrefixTuningConfig,
     PromptEncoderConfig,
-    FourierModel
+    MaCPModel
 )
 import optuna
 import evaluate
@@ -32,7 +32,7 @@ def objective(trial):
     weight_decay = 0.
     model_name_or_path = "roberta-large"
     task = "cola"
-    peft_type = PeftType.FOURIER
+    peft_type = PeftType.MaCP
     device = "cuda"
     num_epochs = 30
     num_labels = 2
@@ -40,7 +40,7 @@ def objective(trial):
     batch_size = 32
     if task == "stsb":
         num_labels = 1
-    peft_config = FourierConfig(task_type="SEQ_CLS", inference_mode=False, n_frequency = n_frequency, scale = scale)
+    peft_config = MaCPConfig(task_type="SEQ_CLS", inference_mode=False, n_frequency = n_frequency, scale = scale)
 
     if any(k in model_name_or_path for k in ("gpt", "opt", "bloom")):
         padding_side = "left"
