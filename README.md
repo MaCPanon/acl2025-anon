@@ -3,7 +3,7 @@
 This repository provides the implementation of **MaCP**, a lightweight adaptation method that leverages **Hierarchical Cosine Projection** in the discrete cosine domain. MaCP achieves high accuracy while significantly reducing training cost and GPU memory.
 
 > 🔒 This repository is anonymized and intended for review purposes only.  
-> 🔗 For anonymous access: [anonymous.4open.science link will go here]
+> 🔗 For anonymous access: [[anonymous.4open.science link will go here](https://anonymous.4open.science/r/acl2025-anon-6D2F)]
 
 ---
 
